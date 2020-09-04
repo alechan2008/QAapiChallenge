@@ -1,0 +1,159 @@
+{
+	"info": {
+		"_postman_id": "60f77d36-944e-4bab-8a96-42ed9c87949b",
+		"name": "Fravega QA Challenge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Brewery",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c7307487-b8e3-44d5-9d6d-e0abb2d1c463",
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"[TC-001] - [ tomar aquellos que contengan en la key name, el valor Lagunitas Brewing Co]\",function(){\r",
+							"    filterFunction();\r",
+							"});\r",
+							"\r",
+							"function filterFunction(){\r",
+							"    var lagunitasBrewingList = jsonData.filter(e => e.name === \"Lagunitas Brewing Co\")\r",
+							"pm.environment.set(\"lagunitasBrewingList\",lagunitasBrewingList);\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "b3593561-dc87-4bec-8c57-d976384a0815",
+						"exec": [
+							"pm.variables.set(\"param\",\"lagunitas\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/breweries/autocomplete?query={{param}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"breweries",
+						"autocomplete"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "{{param}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Brewery ID",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "e6f77ece-cbf3-4e9d-a561-ee826f4ee3ac",
+						"exec": [
+							"//this is the respone from api.openbrewerydb.org/breweries/autocomplete?query=lagunitas\r",
+							"var lagunitasBrewingList =pm.environment.get(\"lagunitasBrewingList\");\r",
+							"\r",
+							"//this is a map created from lagunitasBrewingList\r",
+							"var breweryID = lagunitasBrewingList.map(function(e){\r",
+							"    return e.id;\r",
+							"});\r",
+							"var breweriesID = pm.environment.get(\"breweriesID\");\r",
+							"\r",
+							"if(!breweriesID){\r",
+							"    breweriesID=breweryID;\r",
+							"}\r",
+							"\r",
+							"var currentFilter = breweriesID.shift();\r",
+							"pm.environment.set(\"breweryID\",currentFilter);\r",
+							"pm.environment.set(\"breweriesID\",breweriesID);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "f0d55587-7a29-4bb0-b109-727f2b552506",
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"var breweriesID = pm.variables.get(\"breweriesID\");\r",
+							"///////////////////////////////////////\r",
+							"\r",
+							"if(breweriesID && breweriesID.length > 0){\r",
+							"    postman.setNextRequest(\"Brewery ID\");\r",
+							"}else{\r",
+							"    pm.environment.unset(\"breweriesID\");\r",
+							"    postman.setNextRequest();\r",
+							"}\r",
+							"\r",
+							"///////////////////////////////\r",
+							"\r",
+							"// only play the test if the state is California\r",
+							"(jsonData.state !== \"California\" ? pm.test.skip : pm.test)(\"[TC-002] - Validar la respuesta del servicio, para el state california\",function(){\r",
+							"    validateBussinesResponse();\r",
+							"});\r",
+							"//////////////////////////////\r",
+							"\r",
+							"// detailed business information to assert.\r",
+							"\r",
+							"let idB = 761;\r",
+							"const nameB = \"Lagunitas Brewing Co\";\r",
+							"const streetB =\"1280 N McDowell Blvd\";\r",
+							"const phoneB = \"7077694495\";\r",
+							"\r",
+							"function validateBussinesResponse(){\r",
+							"    \r",
+							"    const idB = 761;\r",
+							"    const nameB = \"Lagunitas Brewing Co\";\r",
+							"    const streetB =\"1280 N McDowell Blvd\";\r",
+							"    const phoneB = \"7077694495\";\r",
+							"\r",
+							"    pm.expect(jsonData.id).to.equal(idB);\r",
+							"    pm.expect(jsonData.name).to.be.equal(nameB);\r",
+							"    pm.expect(jsonData.street).to.be.equal(streetB);\r",
+							"    pm.expect(jsonData.phone).to.be.equal(phoneB);\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/breweries/{{breweryID}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"breweries",
+						"{{breweryID}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
